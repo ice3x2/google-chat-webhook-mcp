@@ -11,6 +11,7 @@
     "test:snapshot": "npx ts-node scripts/run-snapshot-tests.ts",
     "test:snapshot:update": "npx ts-node scripts/run-snapshot-tests.ts --update",
     "test:integration": "npx ts-node scripts/run-integration-tests.ts",
+    "test:logging": "npx ts-node scripts/test-logging.ts",
     "test": "npm run test:snapshot && npm run test:integration"
   },
   "keywords": [

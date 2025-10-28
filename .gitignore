@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.log
+logs/
 integration-result*.json
 .env
 tests/snapshot-test-results.json

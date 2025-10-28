@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logger } from './logger';
 
 export interface ImageValidationResult {
   valid: boolean;
@@ -33,22 +34,36 @@ export async function validateImageUrl(
 
     // Check content type
     if (!contentType.toLowerCase().startsWith('image/')) {
+      const error = `Invalid content type: ${contentType} (expected image/*)`;
+      logger.warn('imageValidator', 'image_validation_failed', {
+        url,
+        error,
+        contentType,
+        contentLength,
+      });
       return {
         valid: false,
         contentType,
         contentLength,
-        error: `Invalid content type: ${contentType} (expected image/*)`,
+        error,
       };
     }
 
     // Check content length (5MB limit)
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (contentLength > maxSize) {
+      const error = `Image too large: ${contentLength} bytes (max ${maxSize} bytes)`;
+      logger.warn('imageValidator', 'image_validation_failed', {
+        url,
+        error,
+        contentType,
+        contentLength,
+      });
       return {
         valid: false,
         contentType,
         contentLength,
-        error: `Image too large: ${contentLength} bytes (max ${maxSize} bytes)`,
+        error,
       };
     }
 
@@ -73,6 +88,11 @@ export async function validateImageUrl(
     } else {
       errorMessage = String(error);
     }
+
+    logger.warn('imageValidator', 'image_validation_failed', {
+      url,
+      error: errorMessage,
+    });
 
     return {
       valid: false,

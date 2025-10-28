@@ -203,7 +203,7 @@ async function imageToWidget(token: any) {
   alt = (alt || '').toString().replace(/<.*?>/g, '').trim();
   
   if (!url || !/^https:\/\//i.test(url)) {
-    return { textParagraph: { text: `[이미지: ${alt || 'invalid url'}] ${url}` } };
+    return { textParagraph: { text: `[IMAGE: ${alt || 'invalid url'}] ${url}` } };
   }
 
   // Validate image URL with HEAD request

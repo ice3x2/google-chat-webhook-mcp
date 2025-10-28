@@ -4,12 +4,17 @@ import { z } from 'zod';
 import { sendTextMessage } from './tools/sendTextMessage';
 import { sendCardsV2Message } from './tools/sendCardsV2Message';
 import { sendMarkdownMessage } from './tools/sendMarkdownMessage';
+import { startLogCleanupScheduler } from './utils/logCleaner';
+import { logger } from './utils/logger';
 
 export async function startServer() {
   const webhook = process.env.GOOGLE_CHAT_WEBHOOK_URL || undefined;
   if (!webhook) {
     console.warn('GOOGLE_CHAT_WEBHOOK_URL not set — send operations will be mocked/logged.');
   }
+
+  // Start log cleanup scheduler (runs every 24 hours)
+  startLogCleanupScheduler(24);
 
   const server = new McpServer({ name: 'google-chat-webhook', version: '0.1.0' });
 
