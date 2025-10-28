@@ -8,6 +8,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "lint": "eslint src/**/*.ts scripts/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts scripts/**/*.ts --fix",
     "test:snapshot": "npx ts-node scripts/run-snapshot-tests.ts",
     "test:snapshot:update": "npx ts-node scripts/run-snapshot-tests.ts --update",
     "test:integration": "npx ts-node scripts/run-integration-tests.ts",
@@ -30,6 +32,9 @@
   "devDependencies": {
     "@types/express": "^4.17.25",
     "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
     "express": "^4.21.2",
     "ts-node": "^10.0.0",
     "typescript": "^5.0.0"
