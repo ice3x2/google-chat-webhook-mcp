@@ -1,7 +1,8 @@
 import { marked } from 'marked';
+import { validateImageUrl } from '../utils/imageValidator';
 
 // Convert markdown string into Cards V2 compatible card array
-export function markdownToCardsV2(markdown: string, cardTitle?: string): any[] {
+export async function markdownToCardsV2(markdown: string, cardTitle?: string): Promise<any[]> {
   if (!markdown || markdown.trim() === '') throw new Error('Markdown content is empty');
 
   const tokens = marked.lexer(markdown);
@@ -13,13 +14,13 @@ export function markdownToCardsV2(markdown: string, cardTitle?: string): any[] {
         widgets.push(headingToWidget(token));
         break;
       case 'paragraph': {
-        const res = paragraphToWidget(token);
+        const res = await paragraphToWidget(token);
         if (Array.isArray(res)) widgets.push(...res);
         else widgets.push(res);
         break;
       }
       case 'image':
-        widgets.push(imageToWidget(token));
+        widgets.push(await imageToWidget(token));
         break;
       case 'list':
         widgets.push(listToWidget(token));
@@ -49,7 +50,7 @@ function headingToWidget(token: any) {
   return { textParagraph: { text: `\n<b>${prefix} ${text}</b>\n` } };
 }
 
-function paragraphToWidget(token: any) {
+async function paragraphToWidget(token: any) {
   // Output widgets for this paragraph (may be 1 or multiple)
   const out: any[] = [];
 
@@ -73,7 +74,7 @@ function paragraphToWidget(token: any) {
           out.push({ textParagraph: { text: buffer } });
           buffer = '';
         }
-        out.push(imageToWidget(t));
+        out.push(await imageToWidget(t));
       } else {
         const txt = (t.raw || t.text || '') + '';
         buffer += txt;
@@ -100,7 +101,7 @@ function paragraphToWidget(token: any) {
     }
     const alt = (match[1] || '').replace(/<\/?[^>]+(>|$)/g, '').trim();
     const url = (match[2] || '').trim();
-    out.push(imageToWidget({ href: url, text: alt }));
+    out.push(await imageToWidget({ href: url, text: alt }));
     lastIndex = imgRegex.lastIndex;
   }
   if (lastIndex < text.length) {
@@ -190,7 +191,7 @@ function tableToWidget(token: any) {
   return { textParagraph: { text: '```\n' + tableText + '\n```' } };
 }
 
-function imageToWidget(token: any) {
+async function imageToWidget(token: any) {
   let rawUrl = token.href || token.url || token.imageUrl || '';
   let alt = token.text || token.alt || '';
   rawUrl = rawUrl.replace(/%3C.*?%3E/gi, '');
@@ -200,9 +201,21 @@ function imageToWidget(token: any) {
   const match = rawUrl.match(/https?:\/\/[\w\-./?%&=+#~,:@()\[\]!]*/i);
   const url = match ? match[0] : rawUrl;
   alt = (alt || '').toString().replace(/<.*?>/g, '').trim();
+  
   if (!url || !/^https:\/\//i.test(url)) {
     return { textParagraph: { text: `[이미지: ${alt || 'invalid url'}] ${url}` } };
   }
+
+  // Validate image URL with HEAD request
+  const validation = await validateImageUrl(url);
+  if (!validation.valid) {
+    return { 
+      textParagraph: { 
+        text: `[이미지 로드 실패: ${alt || 'image'}] <a href="${url}">${url}</a>\n❌ ${validation.error}` 
+      } 
+    };
+  }
+
   return { image: { imageUrl: url, altText: alt || 'image' } };
 }
 

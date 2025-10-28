@@ -15,9 +15,9 @@ console.log('hello');
 \`\`\`
 `;
 
-function run() {
+async function run() {
   try {
-    const cards = markdownToCardsV2(sample, '테스트 카드');
+    const cards = await markdownToCardsV2(sample, '테스트 카드');
     console.log(JSON.stringify(cards, null, 2));
   } catch (e) {
     console.error('Conversion failed:', e);

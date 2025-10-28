@@ -9,7 +9,7 @@ export async function sendMarkdownMessage(webhookUrl: string, options: SendMarkd
 
   // Phase0: 시도형 스텁 - 변환 후 바로 sendCardsV2Message 호출
   try {
-    const cardsV2 = markdownToCardsV2(markdown, cardTitle);
+    const cardsV2 = await markdownToCardsV2(markdown, cardTitle);
     // validate before sending
     try {
       validateCardsV2(cardsV2);
