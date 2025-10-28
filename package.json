@@ -2,18 +2,19 @@
   "name": "google-chat-webhook-mcp",
   "version": "0.1.0",
   "description": "MCP server that forwards messages to Google Chat Webhooks (text and cardsV2).",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "tsx src/index.ts",
     "lint": "eslint src/**/*.ts scripts/**/*.ts",
     "lint:fix": "eslint src/**/*.ts scripts/**/*.ts --fix",
-    "test:snapshot": "npx ts-node scripts/run-snapshot-tests.ts",
-    "test:snapshot:update": "npx ts-node scripts/run-snapshot-tests.ts --update",
-    "test:integration": "npx ts-node scripts/run-integration-tests.ts",
-    "test:logging": "npx ts-node scripts/test-logging.ts",
+    "test:snapshot": "tsx scripts/run-snapshot-tests.ts",
+    "test:snapshot:update": "tsx scripts/run-snapshot-tests.ts --update",
+    "test:integration": "tsx scripts/run-integration-tests.ts",
+    "test:logging": "tsx scripts/test-logging.ts",
     "test": "npm run test:snapshot && npm run test:integration"
   },
   "keywords": [
@@ -48,6 +49,7 @@
     "eslint": "^9.38.0",
     "express": "^4.21.2",
     "ts-node": "^10.0.0",
+    "tsx": "^4.20.6",
     "typescript": "^5.0.0"
   }
 }
