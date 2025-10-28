@@ -73,11 +73,10 @@ def greet(name):
     name: 'Valid Images',
     markdown: `## Images
 
-Valid placeholder image:
-![Placeholder](https://via.placeholder.com/150)
+GitHub logo (should work):
+![GitHub](https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png)
 
-Another image:
-![Test Image](https://httpbin.org/image/png)`,
+Note: Image validation may timeout in CI environments.`,
     cardTitle: 'Images',
     description: 'Tests image rendering with valid URLs',
   },

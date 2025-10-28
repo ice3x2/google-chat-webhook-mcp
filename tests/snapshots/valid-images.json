@@ -12,22 +12,18 @@
             },
             {
               "textParagraph": {
-                "text": "Valid placeholder image:\n"
+                "text": "GitHub logo (should work):\n"
+              }
+            },
+            {
+              "image": {
+                "imageUrl": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+                "altText": "GitHub"
               }
             },
             {
               "textParagraph": {
-                "text": "[이미지 로드 실패: Placeholder] <a href=\"https://via.placeholder.com/150\">https://via.placeholder.com/150</a>\n❌ Network error or URL not reachable"
-              }
-            },
-            {
-              "textParagraph": {
-                "text": "Another image:\n"
-              }
-            },
-            {
-              "textParagraph": {
-                "text": "[이미지 로드 실패: Test Image] <a href=\"https://httpbin.org/image/png\">https://httpbin.org/image/png</a>\n❌ HTTP 503: Service Temporarily Unavailable"
+                "text": "Note: Image validation may timeout in CI environments."
               }
             }
           ]
