@@ -3,3 +3,6 @@ dist/
 *.log
 integration-result*.json
 .env
+tests/snapshot-test-results.json
+tests/integration-test-results.json
+tests/mock-webhook-requests.json

@@ -18,6 +18,7 @@ export async function sendCardsV2Message(params: SendCardsV2Params, webhookUrl?:
   const payload: any = { cardsV2: params.cardsV2 };
   if (params.text) payload.text = params.text;
 
+  console.log(`[sendCardsV2Message] Sending to: ${webhookUrl}`);
   const res = await axios.post(webhookUrl, payload, { timeout: 5000 });
   return res.data;
 }

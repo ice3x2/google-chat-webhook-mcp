@@ -1,0 +1,41 @@
+[
+  {
+    "cardId": "md-card-0",
+    "card": {
+      "sections": [
+        {
+          "widgets": [
+            {
+              "textParagraph": {
+                "text": "\n<b>## Images</b>\n"
+              }
+            },
+            {
+              "textParagraph": {
+                "text": "Valid placeholder image:\n"
+              }
+            },
+            {
+              "textParagraph": {
+                "text": "[이미지 로드 실패: Placeholder] <a href=\"https://via.placeholder.com/150\">https://via.placeholder.com/150</a>\n❌ Network error or URL not reachable"
+              }
+            },
+            {
+              "textParagraph": {
+                "text": "Another image:\n"
+              }
+            },
+            {
+              "textParagraph": {
+                "text": "[이미지 로드 실패: Test Image] <a href=\"https://httpbin.org/image/png\">https://httpbin.org/image/png</a>\n❌ HTTP 503: Service Temporarily Unavailable"
+              }
+            }
+          ]
+        }
+      ],
+      "header": {
+        "title": "Images"
+      }
+    }
+  }
+]
