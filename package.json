@@ -19,10 +19,21 @@
   "keywords": [
     "mcp",
     "google-chat",
-    "webhook"
+    "webhook",
+    "markdown",
+    "cards-v2",
+    "model-context-protocol"
   ],
-  "author": "",
+  "author": "ice3x2",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ice3x2/google-chat-webhook-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ice3x2/google-chat-webhook-mcp/issues"
+  },
+  "homepage": "https://github.com/ice3x2/google-chat-webhook-mcp#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.0",
     "axios": "^1.0.0",
