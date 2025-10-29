@@ -1,11 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { sendTextMessage } from './tools/sendTextMessage';
-import { sendCardsV2Message } from './tools/sendCardsV2Message';
-import { sendMarkdownMessage } from './tools/sendMarkdownMessage';
-import { startLogCleanupScheduler } from './utils/logCleaner';
-import { logger } from './utils/logger';
+import { sendTextMessage } from './tools/sendTextMessage.js';
+import { sendCardsV2Message } from './tools/sendCardsV2Message.js';
+import { sendMarkdownMessage } from './tools/sendMarkdownMessage.js';
+import { startLogCleanupScheduler } from './utils/logCleaner.js';
+import { logger } from './utils/logger.js';
 
 export async function startServer() {
   const webhook = process.env.GOOGLE_CHAT_WEBHOOK_URL || undefined;
@@ -16,7 +16,7 @@ export async function startServer() {
   // Start log cleanup scheduler (runs every 24 hours)
   startLogCleanupScheduler(24);
 
-  const server = new McpServer({ name: 'google-chat-webhook', version: '0.1.0' });
+  const server = new McpServer({ name: 'google-chat-webhook', version: '0.1.1' });
 
   // Register tool: send_google_chat_text
   const sendTextHandler = (async ({ text }: { text: string }) => {
@@ -89,5 +89,9 @@ export async function startServer() {
   // Use stdio transport for stdin/stdout integration
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.log('MCP stdio server connected. Listening on stdin/stdout.');
+  
+  // Keep process alive by resuming stdin
+  process.stdin.resume();
+  
+  console.error('MCP stdio server connected. Listening on stdin/stdout.');
 }

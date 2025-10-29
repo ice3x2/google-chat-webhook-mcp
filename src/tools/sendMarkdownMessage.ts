@@ -1,9 +1,9 @@
-import { markdownToCardsV2 } from './markdownToCards';
-import { sendCardsV2Message } from './sendCardsV2Message';
-import { sendTextMessage } from './sendTextMessage';
-import { validateCardsV2 } from '../utils/cardsV2Validator';
-import { logger } from '../utils/logger';
-import type { SendMarkdownOptions, SendMarkdownResult } from '../types/markdown';
+import { markdownToCardsV2 } from './markdownToCards.js';
+import { sendCardsV2Message } from './sendCardsV2Message.js';
+import { sendTextMessage } from './sendTextMessage.js';
+import { validateCardsV2 } from '../utils/cardsV2Validator.js';
+import { logger } from '../utils/logger.js';
+import type { SendMarkdownOptions, SendMarkdownResult } from '../types/markdown.js';
 
 export async function sendMarkdownMessage(webhookUrl: string, options: SendMarkdownOptions): Promise<SendMarkdownResult> {
   const { markdown, cardTitle, fallbackToText = true } = options;

@@ -1,5 +1,5 @@
 import { marked } from 'marked';
-import { validateImageUrl } from '../utils/imageValidator';
+import { validateImageUrl } from '../utils/imageValidator.js';
 
 // Convert markdown string into Cards V2 compatible card array
 export async function markdownToCardsV2(markdown: string, cardTitle?: string): Promise<any[]> {

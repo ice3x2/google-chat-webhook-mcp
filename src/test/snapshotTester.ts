@@ -1,5 +1,5 @@
-import { markdownToCardsV2 } from '../tools/markdownToCards';
-import { validateCardsV2 } from '../utils/cardsV2Validator';
+import { markdownToCardsV2 } from '../tools/markdownToCards.js';
+import { validateCardsV2 } from '../utils/cardsV2Validator.js';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 

@@ -1,4 +1,5 @@
-import { startServer } from './server';
+#!/usr/bin/env node
+import { startServer } from './server.js';
 
 async function main() {
   await startServer();
