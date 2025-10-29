@@ -18,11 +18,15 @@ export class MockWebhookServer {
     this.port = port;
     this.app = express();
     this.app.use(express.json({ limit: '10mb' }));
+    
+    // Setup routes first before logging middleware
+    this.setupRoutes();
+    
+    // Catch-all for debugging
     this.app.use((req: Request, res: Response, next: any) => {
-      console.log(`[MockWebhook] ${req.method} ${req.url}`);
+      console.log(`[MockWebhook] ${req.method} ${req.url} - No route matched`);
       next();
     });
-    this.setupRoutes();
   }
 
   private setupRoutes() {

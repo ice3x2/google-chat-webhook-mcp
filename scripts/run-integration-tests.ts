@@ -6,13 +6,16 @@ import { writeFileSync } from 'fs';
 async function runIntegrationTests() {
   console.log('🚀 Starting integration tests with mock webhook server...\n');
 
-  const server = new MockWebhookServer(3000);
+  const server = new MockWebhookServer(3456); // Changed from 3000 to avoid conflicts
   let webhookUrl: string;
 
   try {
     // Start mock server
     webhookUrl = await server.start();
     console.log('');
+    
+    // Wait for server to be fully ready (important for Express routing)
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const results: any[] = [];
 
