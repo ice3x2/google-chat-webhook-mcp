@@ -1,4 +1,502 @@
+
+---
 # Google Chat Webhook MCP Server
+
+[![CI](https://github.com/ice3x2/google-chat-webhook-mcp/workflows/CI/badge.svg)](https://github.com/ice3x2/google-chat-webhook-mcp/actions)
+[![npm version](https://img.shields.io/npm/v/google-chat-webhook-mcp.svg)](https://www.npmjs.com/package/google-chat-webhook-mcp)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+An MCP (Model Context Protocol) server that sends messages to Google Chat via webhooks. Automatically converts Markdown to Google Chat Cards V2 format with image validation, structured logging, and fallback handling.
+
+## Features
+
+- 🚀 **MCP Protocol Support**: Integrates with Claude Desktop, GitHub Copilot, and other MCP clients
+- 📝 **Markdown → Cards V2 Auto-conversion**: Supports headers, lists, code blocks, tables, images, and more
+- 🖼️ **Image URL Validation**: Validates with HEAD requests (HTTP status, Content-Type, size)
+- 🔄 **Auto Fallback**: Automatically falls back to text when Cards V2 fails
+- 📊 **Structured Logging**: JSON format with 30-day retention
+- ✅ **Test Automation**: Snapshot tests, integration tests, CI/CD pipeline
+
+## Installation
+
+### npm (Recommended)
+
+```bash
+npm install -g google-chat-webhook-mcp
+```
+
+### From Source (Development)
+
+```bash
+git clone https://github.com/ice3x2/google-chat-webhook-mcp.git
+cd google-chat-webhook-mcp
+npm install
+npm run build
+```
+
+## Google Chat Webhook Setup
+
+Before configuring the MCP server, create a Google Chat Webhook URL:
+
+1. Open your Google Chat space
+2. Menu → "Apps & integrations" → "Manage webhooks"
+3. Click "Add webhook"
+4. Enter a name and **copy the URL**
+5. Use it in the configuration below
+
+## MCP Client Configuration
+
+### 1. Claude Desktop
+
+#### Config File Location
+
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+#### npm Installation
+
+```json
+{
+  "mcpServers": {
+    "google-chat": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+      }
+    }
+  }
+}
+```
+
+#### Source Installation
+
+```json
+{
+  "mcpServers": {
+    "google-chat": {
+      "command": "node",
+      "args": ["C:\\path\\to\\google-chat-webhook-mcp\\dist\\index.js"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+      }
+    }
+  }
+}
+```
+
+**⚠️ Note**: Use `\\` or `/` for Windows paths (e.g., `C:/path/to/...`)
+
+#### How to Apply
+
+1. Completely quit Claude Desktop (including system tray)
+2. Save the config file
+3. Restart Claude Desktop
+4. Use commands like "Send a message to Google Chat"
+
+### 2. GitHub Copilot (VS Code)
+
+[VS Code GitHub Copilot](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode) supports MCP through **agent mode**. Configure MCP servers in workspace or user settings.
+
+#### Configuration File Locations
+
+Choose one of the following:
+
+- **User Settings**: `~/.vscode/settings.json` or `%APPDATA%\Code\User\settings.json` (Windows)
+- **Workspace Settings**: `.vscode/settings.json` in your project root
+- **Claude Desktop Config** (Auto-import): Copy from `claude_desktop_config.json`
+
+#### Configuration (mcp.json format)
+
+Add to `settings.json`:
+
+```json
+{
+  "github.copilot.chat.mcp.servers": {
+    "google-chat": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+      }
+    }
+  }
+}
+```
+
+#### Features
+
+- **Agent Mode Integration**: MCP tools available in agent workflow
+- **Per-Session Tool Selection**: Choose which tools to enable per session
+- **STDIO & SSE Support**: Both transport types supported
+- **Debugging**: Restart commands and output logging built-in
+
+#### Using with Agent Mode
+
+1. Open GitHub Copilot Chat in VS Code
+2. Enable agent mode (if not already enabled)
+3. Start a conversation - Copilot will automatically access MCP tools
+4. Tools require approval before execution
+
+**Example:**
+```
+@workspace Send a deployment summary to Google Chat
+```
+
+**📝 Note**: GitHub Copilot's MCP support includes agent mode, allowing sophisticated workflows. Make sure you're using the latest VS Code and GitHub Copilot extension.
+
+### 3. Other MCP Clients
+
+Works with any MCP-compatible client:
+
+```json
+{
+  "command": "npx",
+  "args": ["-y", "google-chat-webhook-mcp"],
+  "env": {
+    "GOOGLE_CHAT_WEBHOOK_URL": "your-webhook-url"
+  }
+}
+```
+
+## Usage
+
+### MCP Tools (3 Tools)
+
+Available tools in Claude Desktop or other MCP clients:
+
+#### 1. `send_google_chat_text`
+Send simple text messages
+
+**Example (Claude Desktop):**
+```
+Send "Hello from Claude!" to Google Chat
+```
+
+**Parameters:**
+```json
+{
+  "text": "Hello, Google Chat!"
+}
+```
+
+#### 2. `send_google_chat_cards_v2`
+Send Cards V2 format directly (advanced users)
+
+**Parameters:**
+```json
+{
+  "text": "Card Message",
+  "cardsV2": [
+    {
+      "cardId": "unique-card",
+      "card": {
+        "header": { "title": "Card Title" },
+        "sections": [
+          {
+            "widgets": [
+              { "textParagraph": { "text": "Card content" } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+#### 3. `send_google_chat_markdown` ⭐ **Recommended**
+Convert Markdown to Cards V2 and send
+
+**Example (Claude Desktop):**
+```
+Send this markdown to Google Chat:
+# Project Update
+- Task 1: ✅ Completed
+- Task 2: 🚧 In Progress
+**Deadline**: Tomorrow
+```
+
+**Parameters:**
+```json
+{
+  "markdown": "# Title\n\n**Bold** and *italic*\n\n- List item 1\n- List item 2\n\n```python\nprint('Hello')\n```",
+  "cardTitle": "Markdown Message",
+  "fallbackToText": true
+}
+```
+
+**Options:**
+- `cardTitle`: Title shown at the top of the card (optional)
+- `fallbackToText`: Auto-send as text on conversion failure (default: false)
+
+### Claude Desktop Usage Example
+
+After setup, Claude will automatically use MCP tools when you chat naturally:
+
+**👤 User:**
+> "Send a project status update to Google Chat. Show 3 completed tasks and 2 in-progress tasks as a markdown list."
+
+**🤖 Claude:**
+> (Automatically calls `send_google_chat_markdown` tool)
+> 
+> I've sent the message to Google Chat. The project status has been updated.
+
+### Supported Markdown Syntax
+
+Markdown written in Claude or MCP clients is automatically converted to Google Chat Cards V2.
+
+| Syntax | Markdown Example | Google Chat Rendering |
+|--------|------------------|----------------------|
+| **Headers** | `# H1`, `## H2`, `### H3` | Bold with size differences |
+| **Bold** | `**bold**` or `__bold__` | **bold** |
+| **Italic** | `*italic*` or `_italic_` | *italic* |
+| **Inline Code** | `` `code` `` | `code` (monospace) |
+| **Code Block** | ` ```python\ncode\n``` ` | Syntax-highlighted box |
+| **Ordered List** | `1. First\n2. Second` | 1. First<br>2. Second |
+| **Unordered List** | `- Item` or `* Item` | • Item |
+| **Nested List** | `  - nested` (2-space indent) | 　• nested (Em space) |
+| **Table** | `\| A \| B \|\n\|--\|--\|` | Monospace table |
+| **Image** | `![alt](https://...)` | Image widget (after validation) |
+| **Link** | `[text](https://...)` | Clickable link |
+| **Horizontal Rule** | `---` or `***` | Divider |
+| **Blockquote** | `> quote` | Indented + gray text |
+
+**Example Markdown:**
+```markdown
+# Project Deployment Complete 🚀
+
+## Key Changes
+
+- **Performance**: API response 30% faster
+- **Bug Fix**: Login error resolved
+- New feature added
+
+## Deployment Status
+
+| Environment | Status | Version |
+|-------------|--------|---------|
+| Production | ✅ | v2.1.0 |
+| Staging | ✅ | v2.1.0 |
+
+## Next Steps
+
+1. Monitor for 24 hours
+2. Collect user feedback
+3. Plan next sprint
+
+Code example:
+```python
+def deploy():
+    print("Deploying v2.1.0...")
+    return True
+```
+
+See [documentation](https://docs.example.com) for details.
+```
+
+**Result:** Headers, lists, tables, and code blocks are all visually distinguished in Google Chat.
+
+## Environment Variables
+
+### Required
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `GOOGLE_CHAT_WEBHOOK_URL` | Google Chat Webhook URL | `https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx` |
+
+### Optional (Logging)
+
+| Variable | Description | Default | Values |
+|----------|-------------|---------|--------|
+| `LOG_LEVEL` | Log level | `INFO` | `DEBUG`, `INFO`, `WARN`, `ERROR` |
+| `LOG_DIR` | Log directory path | `./logs` | Absolute/relative path |
+| `LOG_RETENTION_DAYS` | Days to keep logs | `30` | Number (days) |
+| `LOG_ENABLE_CONSOLE` | Enable console output | `true` | `true`, `false` |
+
+### Configuration Methods
+
+#### Claude Desktop (claude_desktop_config.json)
+
+```json
+{
+  "mcpServers": {
+    "google-chat": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx",
+        "LOG_LEVEL": "INFO",
+        "LOG_RETENTION_DAYS": "30"
+      }
+    }
+  }
+}
+```
+
+#### .env File (Development)
+
+Create `.env` in project root:
+
+```env
+GOOGLE_CHAT_WEBHOOK_URL=https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx
+LOG_LEVEL=INFO
+LOG_DIR=./logs
+LOG_RETENTION_DAYS=30
+LOG_ENABLE_CONSOLE=true
+```
+
+## Limitations
+
+### Google Chat API Constraints
+
+| Item | Limit | Workaround |
+|------|-------|------------|
+| **Image Protocol** | HTTPS only | HTTP URLs replaced with text links |
+| **Image Size** | Max 5MB | Show as link on validation failure |
+| **Image Auth** | Public URLs only | No access if auth required |
+| **Content-Type** | `image/*` only | HTML pages rejected |
+| **Markdown Support** | Limited | Unsupported syntax approximated |
+
+### Markdown Conversion Limitations
+
+**✅ Fully Supported:**
+- Headers (H1~H6)
+- Bold, italic, inline code
+- Ordered/unordered lists (up to 3 levels)
+- Code blocks (syntax highlighting)
+- Tables (monospace)
+- Links, images
+
+**⚠️ Partial Support:**
+- Complex nesting → Simplified
+- HTML tags → Converted to text
+- Blockquotes → Shown as indents
+
+**❌ Not Supported:**
+- Footnotes
+- Definition lists
+- Math formulas (LaTeX)
+- Task checkboxes (`- [ ]`, `- [x]`)
+- Emoji shortcodes (`:smile:`, Unicode emojis work)
+
+### MCP Client Compatibility
+
+| Client | Support | Notes |
+|--------|---------|-------|
+| **Claude Desktop** | ✅ Full | Recommended |
+| **GitHub Copilot** | ⚠️ Experimental | Awaiting official MCP support |
+| **Cursor** | ⚠️ Untested | Expected to work with MCP support |
+| **Other MCP Clients** | ⚠️ Untested | Should work if MCP-compliant |
+
+## FAQ
+
+### Q: MCP server not recognized in Claude Desktop
+**A**: Check the following:
+
+1. **Config file location**:
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Linux: `~/.config/Claude/claude_desktop_config.json`
+
+2. **Valid JSON format** (commas, quotes, etc.)
+
+3. **Restart Claude Desktop completely**:
+   - Quit from system tray/menu bar
+   - Restart
+
+4. **Check npm package**:
+   ```bash
+   npm list -g google-chat-webhook-mcp
+   ```
+
+### Q: Can I use with GitHub Copilot?
+**A**: GitHub Copilot doesn't officially support MCP yet.
+
+**Current options:**
+- Direct terminal execution in VS Code
+- MCP Bridge extension (experimental)
+- Wait for GitHub Copilot updates
+
+**Recommended:** Use **Claude Desktop** for the most stable experience.
+
+### Q: Images not displaying
+**A**: Image validation failure causes:
+
+1. **HTTPS only** (HTTP not supported)
+2. **File size**: Must be under 5MB
+3. **Public access**: Must be accessible without auth
+4. **Content-Type**: Response header must be `image/*`
+
+**Debug:**
+```bash
+cat logs/app-YYYY-MM-DD.log | grep "image_validation_failed"
+```
+
+### Q: Cards V2 conversion fails
+**A**: Use `fallbackToText` option:
+
+```json
+{
+  "markdown": "...",
+  "fallbackToText": true
+}
+```
+
+Check logs for details:
+```bash
+cat logs/errors-YYYY-MM-DD.log
+```
+
+### Q: Too many log files
+**A**: Adjust with environment variables:
+
+```json
+{
+  "env": {
+    "LOG_LEVEL": "WARN",
+    "LOG_RETENTION_DAYS": "7"
+  }
+}
+```
+
+### Q: Multiple Google Chat spaces
+**A**: Register separate MCP server instances:
+
+```json
+{
+  "mcpServers": {
+    "google-chat-team-a": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "https://chat.googleapis.com/.../team-a/..."
+      }
+    },
+    "google-chat-team-b": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "https://chat.googleapis.com/.../team-b/..."
+      }
+    }
+  }
+}
+```
+
+## License
+
+MIT License - [LICENSE](LICENSE)
+
+## Links
+
+- [Model Context Protocol](https://github.com/modelcontextprotocol)
+- [Claude Desktop](https://claude.ai/desktop)
+- [Google Chat API](https://developers.google.com/chat)
+
+---
+Korean:
 
 [![CI](https://github.com/ice3x2/google-chat-webhook-mcp/workflows/CI/badge.svg)](https://github.com/ice3x2/google-chat-webhook-mcp/actions)
 [![npm version](https://img.shields.io/npm/v/google-chat-webhook-mcp.svg)](https://www.npmjs.com/package/google-chat-webhook-mcp)
@@ -95,16 +593,23 @@ MCP 서버 설정 전에 먼저 Google Chat Webhook URL을 생성해야 합니�
 
 ### 2. GitHub Copilot (VS Code)
 
-GitHub Copilot은 아직 공식적으로 MCP를 지원하지 않지만, MCP 브릿지를 통해 사용 가능합니다.
+[VS Code GitHub Copilot](https://code.visualstudio.com/docs/copilot/chat/chat-agent-mode)은 **에이전트 모드**를 통해 MCP를 지원합니다. 워크스페이스 또는 사용자 설정에서 MCP 서버를 구성할 수 있습니다.
 
-#### 방법 1: MCP Bridge 확장 사용 (실험적)
+#### 설정 파일 위치
 
-1. VS Code에서 MCP Bridge 확장 설치 (있는 경우)
-2. `.vscode/settings.json` 또는 사용자 설정에 추가:
+다음 중 하나를 선택:
+
+- **사용자 설정**: `~/.vscode/settings.json` 또는 `%APPDATA%\Code\User\settings.json` (Windows)
+- **워크스페이스 설정**: 프로젝트 루트의 `.vscode/settings.json`
+- **Claude Desktop 설정** (자동 가져오기): `claude_desktop_config.json`에서 복사
+
+#### 설정 방법 (mcp.json 형식)
+
+`settings.json`에 추가:
 
 ```json
 {
-  "mcp.servers": {
+  "github.copilot.chat.mcp.servers": {
     "google-chat": {
       "command": "npx",
       "args": ["-y", "google-chat-webhook-mcp"],
@@ -116,29 +621,26 @@ GitHub Copilot은 아직 공식적으로 MCP를 지원하지 않지만, MCP 브�
 }
 ```
 
-#### 방법 2: GitHub Copilot Chat의 Custom Instructions
+#### 기능
 
-현재 GitHub Copilot은 MCP를 네이티브 지원하지 않으므로, 대안으로:
+- **에이전트 모드 통합**: 에이전트 워크플로우에서 MCP 도구 사용 가능
+- **세션별 도구 선택**: 세션마다 활성화할 도구 선택 가능
+- **STDIO & SSE 지원**: 두 전송 방식 모두 지원
+- **디버깅**: 재시작 명령 및 출력 로깅 내장
 
-1. `.github/copilot-instructions.md` 파일 생성:
-```markdown
-When I ask to send messages to Google Chat, use the terminal to run:
-npx -y google-chat-webhook-mcp
-With environment variable GOOGLE_CHAT_WEBHOOK_URL set to our webhook.
+#### 에이전트 모드에서 사용하기
+
+1. VS Code에서 GitHub Copilot 채팅 열기
+2. 에이전트 모드 활성화 (기본 활성화된 경우도 있음)
+3. 대화 시작 - Copilot이 자동으로 MCP 도구에 접근
+4. 도구 실행 전 승인 필요
+
+**예시:**
+```
+@workspace 배포 요약을 Google Chat에 전송해줘
 ```
 
-2. 또는 VS Code 터미널에서 직접 실행:
-```bash
-# PowerShell
-$env:GOOGLE_CHAT_WEBHOOK_URL="https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
-npx -y google-chat-webhook-mcp
-
-# Bash/Zsh
-export GOOGLE_CHAT_WEBHOOK_URL="https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
-npx -y google-chat-webhook-mcp
-```
-
-**📝 참고**: GitHub Copilot의 공식 MCP 지원은 향후 추가될 예정입니다. 현재는 Claude Desktop에서 가장 안정적으로 사용할 수 있습니다.
+**📝 참고**: GitHub Copilot의 MCP 지원은 에이전트 모드를 포함하여 정교한 워크플로우를 지원합니다. 최신 버전의 VS Code와 GitHub Copilot 확장을 사용하세요.
 
 ### 3. 기타 MCP 클라이언트
 
