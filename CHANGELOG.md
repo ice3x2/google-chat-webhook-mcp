@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-10-29
+
+### Added
+
+- **Webhook URL Validation**: 서버 시작 시 Google Chat 웹훅 URL 검증
+  - HTTPS 프로토콜 필수 검증
+  - `chat.googleapis.com` 도메인 검증
+  - `/v1/spaces/` 경로 검증
+  - `key` 또는 `token` 파라미터 존재 검증
+- **새로운 로그 이벤트**: `server_start_failed`, `invalid_webhook_url`, `server_starting`
+
+### Changed
+
+- **환경 변수 필수화**: `GOOGLE_CHAT_WEBHOOK_URL` 환경 변수가 없으면 서버 시작 차단
+  - 이전: 경고 메시지만 출력하고 mock 모드로 시작
+  - 현재: 명확한 에러 메시지와 함께 프로세스 종료 (exit code 1)
+- **에러 메시지 개선**: 웹훅 URL 형식 오류 시 상세한 가이드 제공
+
+### Fixed
+
+- **보안 강화**: 잘못된 웹훅 URL로 서버가 시작되는 것을 방지
+- **사용자 경험**: 명확한 에러 메시지로 설정 오류 빠르게 파악 가능
+
+### Technical Details
+
+```typescript
+// 검증 규칙
+✓ HTTPS 프로토콜만 허용
+✓ chat.googleapis.com 도메인만 허용
+✓ /v1/spaces/ 경로 필수
+✓ key 또는 token 파라미터 필수
+
+// 예시 올바른 URL
+https://chat.googleapis.com/v1/spaces/SPACE_ID/messages?key=YOUR_KEY&token=YOUR_TOKEN
+```
+
 ## [0.1.1] - 2025-10-29
 
 ### Fixed
@@ -142,14 +178,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [ ] 통합 테스트 결과 문서화
   - [ ] API 상세 문서
   - [ ] 트러블슈팅 확장
-- [ ] Phase 3.6: 보안 검토
+- [x] Phase 3.6: 보안 검토
+  - [x] 웹훅 URL 검증 추가
+  - [x] 환경 변수 필수화
   - [ ] 의존성 CVE 스캔
-  - [ ] 웹훅 URL 보안 가이드
   - [ ] 외부 이미지 정책
-- [ ] Phase 3.7: 릴리스 준비
-  - [x] npm 패키지 퍼블리시 (v0.1.0, v0.1.1)
+- [x] Phase 3.7: 릴리스 준비
+  - [x] npm 패키지 퍼블리시 (v0.1.0, v0.1.1, v0.1.2)
   - [x] GitHub Release 생성
   - [x] ES Module 호환성 수정
+  - [x] 웹훅 URL 검증
 
+[0.1.2]: https://github.com/ice3x2/google-chat-webhook-mcp/releases/tag/v0.1.2
 [0.1.1]: https://github.com/ice3x2/google-chat-webhook-mcp/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ice3x2/google-chat-webhook-mcp/releases/tag/v0.1.0

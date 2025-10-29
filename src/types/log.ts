@@ -12,7 +12,10 @@ export type LogEvent =
   | 'image_validation_failed'
   | 'send_failed'
   | 'conversion_failed'
-  | 'validation_failed';
+  | 'validation_failed'
+  | 'server_start_failed'
+  | 'invalid_webhook_url'
+  | 'server_starting';
 
 /**
  * 로그 엔트리 기본 구조

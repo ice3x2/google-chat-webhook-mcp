@@ -7,16 +7,71 @@ import { sendMarkdownMessage } from './tools/sendMarkdownMessage.js';
 import { startLogCleanupScheduler } from './utils/logCleaner.js';
 import { logger } from './utils/logger.js';
 
+/**
+ * Validate Google Chat webhook URL format
+ */
+function validateWebhookUrl(url: string): { valid: boolean; error?: string } {
+  try {
+    const parsed = new URL(url);
+    
+    // Must be HTTPS
+    if (parsed.protocol !== 'https:') {
+      return { valid: false, error: 'Webhook URL must use HTTPS protocol' };
+    }
+    
+    // Must be chat.googleapis.com domain
+    if (parsed.hostname !== 'chat.googleapis.com') {
+      return { valid: false, error: 'Webhook URL must be from chat.googleapis.com domain' };
+    }
+    
+    // Must have /v1/spaces/ path
+    if (!parsed.pathname.startsWith('/v1/spaces/')) {
+      return { valid: false, error: 'Webhook URL must have /v1/spaces/ path' };
+    }
+    
+    // Must have key parameter
+    if (!parsed.searchParams.has('key') && !parsed.searchParams.has('token')) {
+      return { valid: false, error: 'Webhook URL must have key or token parameter' };
+    }
+    
+    return { valid: true };
+  } catch (err) {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+}
+
 export async function startServer() {
   const webhook = process.env.GOOGLE_CHAT_WEBHOOK_URL || undefined;
+  
   if (!webhook) {
-    console.warn('GOOGLE_CHAT_WEBHOOK_URL not set — send operations will be mocked/logged.');
+    const error = 'GOOGLE_CHAT_WEBHOOK_URL environment variable is not set';
+    logger.error('server', 'server_start_failed', { error });
+    console.error(`❌ Error: ${error}`);
+    console.error('');
+    console.error('Please set GOOGLE_CHAT_WEBHOOK_URL environment variable with a valid Google Chat webhook URL.');
+    console.error('Example: https://chat.googleapis.com/v1/spaces/SPACE_ID/messages?key=YOUR_KEY&token=YOUR_TOKEN');
+    process.exit(1);
   }
+  
+  // Validate webhook URL format
+  const validation = validateWebhookUrl(webhook);
+  if (!validation.valid) {
+    logger.error('server', 'invalid_webhook_url', { error: validation.error, url: webhook });
+    console.error(`❌ Error: Invalid GOOGLE_CHAT_WEBHOOK_URL - ${validation.error}`);
+    console.error('');
+    console.error('Provided URL:', webhook);
+    console.error('');
+    console.error('Expected format:');
+    console.error('https://chat.googleapis.com/v1/spaces/SPACE_ID/messages?key=YOUR_KEY&token=YOUR_TOKEN');
+    process.exit(1);
+  }
+  
+  logger.info('server', 'server_starting', { webhookDomain: new URL(webhook).hostname });
 
   // Start log cleanup scheduler (runs every 24 hours)
   startLogCleanupScheduler(24);
 
-  const server = new McpServer({ name: 'google-chat-webhook', version: '0.1.1' });
+  const server = new McpServer({ name: 'google-chat-webhook', version: '0.1.2' });
 
   // Register tool: send_google_chat_text
   const sendTextHandler = (async ({ text }: { text: string }) => {
