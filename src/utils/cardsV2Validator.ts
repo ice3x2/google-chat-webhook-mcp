@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-const TextParagraph = z.object({ text: z.string() }).optional();
-const ImageWidget = z.object({ image: z.object({ imageUrl: z.string().url(), altText: z.string().optional() }).optional() });
-
 const Widget = z.object({
   textParagraph: z.object({ text: z.string() }).optional(),
   image: z.object({ imageUrl: z.string().url(), altText: z.string().optional() }).optional()
