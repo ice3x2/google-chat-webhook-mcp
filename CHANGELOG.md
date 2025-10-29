@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-10-29
+
+### Fixed
+
+- **ES Module Compatibility**: 모든 로컬 import 문에 `.js` 확장자 추가
+  - Node.js ES 모듈 사양 준수
+  - `ERR_MODULE_NOT_FOUND` 에러 해결
+- **Stdin Hang Issue**: `process.stdin.resume()` 추가
+  - MCP 서버가 stdin으로부터 메시지를 대기하도록 프로세스 유지
+  - `npx google-chat-webhook-mcp` 실행 시 hang 걸리는 문제 해결
+- **Shebang 추가**: `index.ts`에 `#!/usr/bin/env node` 추가
+  - Unix/Linux 환경에서 직접 실행 가능
+
+### Technical Details
+
+- 모든 `import` 문의 로컬 경로에 `.js` 확장자 명시
+  - `'./server'` → `'./server.js'`
+  - `'../utils/logger'` → `'../utils/logger.js'`
+- `server.ts`에 `process.stdin.resume()` 추가하여 stdin 스트림 활성화
+- MCP 서버 메시지를 `console.error()`로 출력하여 stdout 프로토콜 충돌 방지
+
 ## [0.1.0] - 2025-10-29
 
 ### Added
@@ -126,8 +147,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [ ] 웹훅 URL 보안 가이드
   - [ ] 외부 이미지 정책
 - [ ] Phase 3.7: 릴리스 준비
-  - [ ] npm 패키지 퍼블리시
-  - [ ] 버전 태깅
-  - [ ] GitHub Release 생성
+  - [x] npm 패키지 퍼블리시 (v0.1.0, v0.1.1)
+  - [x] GitHub Release 생성
+  - [x] ES Module 호환성 수정
 
+[0.1.1]: https://github.com/ice3x2/google-chat-webhook-mcp/releases/tag/v0.1.1
 [0.1.0]: https://github.com/ice3x2/google-chat-webhook-mcp/releases/tag/v0.1.0
