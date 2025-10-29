@@ -33,11 +33,8 @@ jobs:
     - name: Build
       run: npm run build
     
-    - name: Run snapshot tests
-      run: npm run test:snapshot
-    
-    - name: Run logging tests
-      run: npm run test:logging
+    - name: Run tests
+      run: npm test
     
     - name: Upload build artifacts
       if: success()
@@ -54,7 +51,7 @@ jobs:
         name: test-results-${{ matrix.node-version }}
         path: |
           tests/snapshot-test-results.json
-          logs/
+          tests/integration-test-results.json
         retention-days: 7
 
   integration-test:
@@ -78,21 +75,13 @@ jobs:
     - name: Build
       run: npm run build
     
-    - name: Run integration tests with webhook
-      env:
-        GOOGLE_CHAT_WEBHOOK_URL: ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
-      run: |
-        if [ -n "$GOOGLE_CHAT_WEBHOOK_URL" ]; then
-          echo "Running integration tests with real webhook..."
-          npx ts-node scripts/test-logging-integration.ts
-        else
-          echo "⚠️  GOOGLE_CHAT_WEBHOOK_URL not set, skipping integration tests"
-        fi
+    - name: Run integration tests
+      run: npm run test:integration
     
-    - name: Upload integration test logs
+    - name: Upload integration test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: integration-logs
-        path: logs/
+        path: tests/integration-test-results.json
         retention-days: 7

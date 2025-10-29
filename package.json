@@ -27,7 +27,6 @@
     "test:snapshot": "tsx scripts/run-snapshot-tests.ts",
     "test:snapshot:update": "tsx scripts/run-snapshot-tests.ts --update",
     "test:integration": "tsx scripts/run-integration-tests.ts",
-    "test:logging": "tsx scripts/test-logging.ts",
     "test": "npm run test:snapshot && npm run test:integration"
   },
   "keywords": [
