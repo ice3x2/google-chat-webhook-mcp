@@ -10,8 +10,9 @@ An MCP (Model Context Protocol) server that sends messages to Google Chat via we
 
 ## Features
 
-- 🚀 **MCP Protocol Support**: Integrates with Claude Desktop, GitHub Copilot, and other MCP clients
-- 📝 **Markdown → Cards V2 Auto-conversion**: Supports headers, lists, code blocks, tables, images, and more
+- 🚀 **MCP Protocol Support**: Integrates with Claude Code, GitHub Copilot, and other MCP clients
+ - � **MCP Protocol Support**: Integrates with Claude Code, GitHub Copilot, and other MCP clients
+- �📝 **Markdown → Cards V2 Auto-conversion**: Supports headers, lists, code blocks, tables, images, and more
 - 🖼️ **Image URL Validation**: Validates with HEAD requests (HTTP status, Content-Type, size)
 - 🔄 **Auto Fallback**: Automatically falls back to text when Cards V2 fails
 - 📊 **Structured Logging**: JSON format with 30-day retention
@@ -46,13 +47,17 @@ Before configuring the MCP server, create a Google Chat Webhook URL:
 
 ## MCP Client Configuration
 
-### 1. Claude Desktop
+### 1. Claude Code
 
 #### Config File Location
 
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **Windows**: `%USERPROFILE%\.claude.json`
+- **macOS/Linux**: `~/.claude.json`
+
+**Note**: Claude Desktop uses different paths:
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
 #### npm Installation
 
@@ -88,11 +93,60 @@ Before configuring the MCP server, create a Google Chat Webhook URL:
 
 **⚠️ Note**: Use `\\` or `/` for Windows paths (e.g., `C:/path/to/...`)
 
+#### Configuration Scopes
+
+Claude Code supports three configuration scopes:
+
+1. **User Scope** (Global): `~/.claude.json` - Available across all projects
+2. **Project Scope** (Shared): `.mcp.json` in project root - Version-controlled, team-shared
+3. **Local Scope** (Private): Project-specific, personal settings
+
+**Priority**: Local > Project > User
+
+#### Project-Scoped Configuration (.mcp.json)
+
+For team-shared MCP servers, create `.mcp.json` in your project root:
+
+```json
+{
+  "mcpServers": {
+    "google-chat": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "${GOOGLE_CHAT_WEBHOOK_URL}"
+      }
+    }
+  }
+}
+```
+
+**Benefits**:
+- ✅ Version-controlled with Git
+- ✅ Team-shared configuration
+- ✅ Environment variable support: `${VAR}` or `${VAR:-default}`
+- ✅ Project-specific MCP servers
+
+**Environment Variables**: Each team member can set their own webhook URL:
+```bash
+# Linux/macOS
+export GOOGLE_CHAT_WEBHOOK_URL="https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+
+# Windows (PowerShell)
+$env:GOOGLE_CHAT_WEBHOOK_URL="https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+```
+
 #### How to Apply
 
-1. Completely quit Claude Desktop (including system tray)
-2. Save the config file
-3. Restart Claude Desktop
+**User-scoped configuration** (~/.claude.json):
+1. Edit `~/.claude.json` (or `%USERPROFILE%\.claude.json` on Windows)
+2. Save the file
+3. Restart Claude Code if already running
+
+**Project-scoped configuration** (.mcp.json):
+1. Create `.mcp.json` in project root
+2. Set environment variables for sensitive data
+3. Commit `.mcp.json` to version control
 4. Use commands like "Send a message to Google Chat"
 
 ### 2. GitHub Copilot (VS Code)
@@ -105,7 +159,7 @@ Choose one of the following:
 
 - **User Settings**: `~/.vscode/settings.json` or `%APPDATA%\Code\User\settings.json` (Windows)
 - **Workspace Settings**: `.vscode/settings.json` in your project root
-- **Claude Desktop Config** (Auto-import): Copy from `claude_desktop_config.json`
+ - **Claude Code Config** (Auto-import): Copy from `~/.claude.json`
 
 #### Configuration (mcp.json format)
 
@@ -164,12 +218,12 @@ Works with any MCP-compatible client:
 
 ### MCP Tools (3 Tools)
 
-Available tools in Claude Desktop or other MCP clients:
+Available tools in Claude Code or other MCP clients:
 
 #### 1. `send_google_chat_text`
 Send simple text messages
 
-**Example (Claude Desktop):**
+**Example (Claude Code):**
 ```
 Send "Hello from Claude!" to Google Chat
 ```
@@ -209,7 +263,7 @@ Send Cards V2 format directly (advanced users)
 #### 3. `send_google_chat_markdown` ⭐ **Recommended**
 Convert Markdown to Cards V2 and send
 
-**Example (Claude Desktop):**
+**Example (Claude Code):**
 ```
 Send this markdown to Google Chat:
 # Project Update
@@ -231,8 +285,8 @@ Send this markdown to Google Chat:
 - `cardTitle`: Title shown at the top of the card (optional)
 - `fallbackToText`: Auto-send as text on conversion failure (default: false)
 
-### Claude Desktop Usage Example
-
+### Claude Code Usage Example
+ 
 After setup, Claude will automatically use MCP tools when you chat naturally:
 
 **👤 User:**
@@ -317,7 +371,7 @@ See [documentation](https://docs.example.com) for details.
 
 ### Configuration Methods
 
-#### Claude Desktop (claude_desktop_config.json)
+#### Claude Code (~/.claude.json)
 
 ```json
 {
@@ -381,45 +435,10 @@ LOG_ENABLE_CONSOLE=true
 - Task checkboxes (`- [ ]`, `- [x]`)
 - Emoji shortcodes (`:smile:`, Unicode emojis work)
 
-### MCP Client Compatibility
 
-| Client | Support | Notes |
-|--------|---------|-------|
-| **Claude Desktop** | ✅ Full | Recommended |
-| **GitHub Copilot** | ⚠️ Experimental | Awaiting official MCP support |
-| **Cursor** | ⚠️ Untested | Expected to work with MCP support |
-| **Other MCP Clients** | ⚠️ Untested | Should work if MCP-compliant |
 
 ## FAQ
 
-### Q: MCP server not recognized in Claude Desktop
-**A**: Check the following:
-
-1. **Config file location**:
-   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - Linux: `~/.config/Claude/claude_desktop_config.json`
-
-2. **Valid JSON format** (commas, quotes, etc.)
-
-3. **Restart Claude Desktop completely**:
-   - Quit from system tray/menu bar
-   - Restart
-
-4. **Check npm package**:
-   ```bash
-   npm list -g google-chat-webhook-mcp
-   ```
-
-### Q: Can I use with GitHub Copilot?
-**A**: GitHub Copilot doesn't officially support MCP yet.
-
-**Current options:**
-- Direct terminal execution in VS Code
-- MCP Bridge extension (experimental)
-- Wait for GitHub Copilot updates
-
-**Recommended:** Use **Claude Desktop** for the most stable experience.
 
 ### Q: Images not displaying
 **A**: Image validation failure causes:
@@ -492,7 +511,7 @@ MIT License - [LICENSE](LICENSE)
 ## Links
 
 - [Model Context Protocol](https://github.com/modelcontextprotocol)
-- [Claude Desktop](https://claude.ai/desktop)
+- [Claude Code](https://claude.ai/desktop)
 - [Google Chat API](https://developers.google.com/chat)
 
 ---
@@ -506,7 +525,7 @@ MCP (Model Context Protocol) 서버로 Google Chat 웹훅을 통해 메시지를
 
 ## 주요 기능
 
-- 🚀 **MCP 프로토콜 지원**: Claude Desktop, GitHub Copilot 등과 통합
+- 🚀 **MCP 프로토콜 지원**: Claude Code, GitHub Copilot 등과 통합
 - 📝 **Markdown → Cards V2 자동 변환**: 헤더, 리스트, 코드블록, 표, 이미지 등 지원
 - 🖼️ **이미지 URL 검증**: HEAD 요청으로 유효성 확인 (HTTP 상태, Content-Type, 크기)
 - 🔄 **자동 폴백**: Cards V2 실패 시 텍스트로 자동 전환
@@ -542,13 +561,17 @@ MCP 서버 설정 전에 먼저 Google Chat Webhook URL을 생성해야 합니�
 
 ## MCP 클라이언트 설정
 
-### 1. Claude Desktop
+### 1. Claude Code
 
 #### 설정 파일 위치
 
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+- **Windows**: `%USERPROFILE%\.claude.json`
+- **macOS/Linux**: `~/.claude.json`
+
+**참고**: Claude Desktop은 다른 경로를 사용합니다:
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Linux: `~/.config/Claude/claude_desktop_config.json`
 
 #### npm 설치 시
 
@@ -584,12 +607,61 @@ MCP 서버 설정 전에 먼저 Google Chat Webhook URL을 생성해야 합니�
 
 **⚠️ 주의**: Windows 경로는 `\\` 또는 `/` 사용 (예: `C:/path/to/...`)
 
+#### 설정 스코프
+
+Claude Code는 3가지 설정 스코프를 지원합니다:
+
+1. **User Scope** (전역): `~/.claude.json` - 모든 프로젝트에서 사용 가능
+2. **Project Scope** (공유): 프로젝트 루트의 `.mcp.json` - 버전 관리, 팀 공유 가능
+3. **Local Scope** (개인): 프로젝트별 개인 설정
+
+**우선순위**: Local > Project > User
+
+#### 프로젝트 수준 설정 (.mcp.json)
+
+팀과 공유할 MCP 서버 설정은 프로젝트 루트에 `.mcp.json` 파일을 생성하세요:
+
+```json
+{
+  "mcpServers": {
+    "google-chat": {
+      "command": "npx",
+      "args": ["-y", "google-chat-webhook-mcp"],
+      "env": {
+        "GOOGLE_CHAT_WEBHOOK_URL": "${GOOGLE_CHAT_WEBHOOK_URL}"
+      }
+    }
+  }
+}
+```
+
+**장점**:
+- ✅ Git으로 버전 관리 가능
+- ✅ 팀과 설정 공유
+- ✅ 환경 변수 지원: `${VAR}` 또는 `${VAR:-기본값}`
+- ✅ 프로젝트별 MCP 서버 설정
+
+**환경 변수 설정**: 각 팀원이 자신의 Webhook URL을 설정할 수 있습니다:
+```bash
+# Linux/macOS
+export GOOGLE_CHAT_WEBHOOK_URL="https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+
+# Windows (PowerShell)
+$env:GOOGLE_CHAT_WEBHOOK_URL="https://chat.googleapis.com/v1/spaces/xxx/messages?key=xxx&token=xxx"
+```
+
 #### 적용 방법
 
-1. Claude Desktop 완전 종료 (시스템 트레이에서도 종료)
-2. 설정 파일 저장
-3. Claude Desktop 재시작
-4. 채팅창에서 "Send a message to Google Chat" 같은 명령 사용
+**User 수준 설정** (~/.claude.json):
+1. `~/.claude.json` 편집 (Windows는 `%USERPROFILE%\.claude.json`)
+2. 파일 저장
+3. Claude Code가 실행 중이면 재시작
+
+**Project 수준 설정** (.mcp.json):
+1. 프로젝트 루트에 `.mcp.json` 생성
+2. 민감한 데이터는 환경 변수로 설정
+3. `.mcp.json`을 버전 관리 시스템에 커밋
+4. "Send a message to Google Chat" 같은 명령 사용
 
 ### 2. GitHub Copilot (VS Code)
 
@@ -601,7 +673,7 @@ MCP 서버 설정 전에 먼저 Google Chat Webhook URL을 생성해야 합니�
 
 - **사용자 설정**: `~/.vscode/settings.json` 또는 `%APPDATA%\Code\User\settings.json` (Windows)
 - **워크스페이스 설정**: 프로젝트 루트의 `.vscode/settings.json`
-- **Claude Desktop 설정** (자동 가져오기): `claude_desktop_config.json`에서 복사
+- **Claude Code 설정** (자동 가져오기): `~/.claude.json`에서 복사
 
 #### 설정 방법 (mcp.json 형식)
 
@@ -665,12 +737,12 @@ MCP 프로토콜을 지원하는 모든 클라이언트에서 사용 가능합�
 
 ### MCP 도구 (3가지)
 
-Claude Desktop이나 다른 MCP 클라이언트에서 다음 도구들을 사용할 수 있습니다:
+Claude Code이나 다른 MCP 클라이언트에서 다음 도구들을 사용할 수 있습니다:
 
 #### 1. `send_google_chat_text`
 간단한 텍스트 메시지 전송
 
-**예시 (Claude Desktop):**
+**예시 (Claude Code):**
 ```
 Send "Hello from Claude!" to Google Chat
 ```
@@ -710,7 +782,7 @@ Cards V2 형식으로 직접 전송 (고급 사용자용)
 #### 3. `send_google_chat_markdown` ⭐ **추천**
 Markdown을 Cards V2로 자동 변환하여 전송
 
-**예시 (Claude Desktop):**
+**예시 (Claude Code):**
 ```
 Send this markdown to Google Chat:
 # Project Update
@@ -732,7 +804,7 @@ Send this markdown to Google Chat:
 - `cardTitle`: 카드 상단에 표시될 제목 (선택)
 - `fallbackToText`: 변환 실패 시 텍스트로 자동 전송 (기본값: false)
 
-### Claude Desktop 사용 예시
+### Claude Code 사용 예시
 
 설정 완료 후 Claude와 자연어로 대화하면 자동으로 MCP 도구를 사용합니다:
 
@@ -825,7 +897,7 @@ def deploy():
 
 ### 설정 방법
 
-#### Claude Desktop (claude_desktop_config.json)
+#### Claude Code (~/.claude.json)
 
 ```json
 {
@@ -988,14 +1060,7 @@ logs/
 - 작업 체크박스 (`- [ ]`, `- [x]`)
 - Emoji 단축코드 (`:smile:` 등, 유니코드 이모지는 가능)
 
-### MCP 클라이언트 호환성
 
-| 클라이언트 | 지원 상태 | 비고 |
-|------------|----------|------|
-| **Claude Desktop** | ✅ 완전 지원 | 권장 환경 |
-| **GitHub Copilot** | ⚠️ 실험적 | MCP 공식 지원 대기 중 |
-| **Cursor** | ⚠️ 미검증 | MCP 지원 시 동작 예상 |
-| **기타 MCP 클라이언트** | ⚠️ 미검증 | MCP 표준 준수 시 동작 |
 
 ### 성능 및 제한
 
@@ -1014,37 +1079,6 @@ logs/
 
 ## FAQ
 
-### Q: Claude Desktop에서 MCP 서버가 인식되지 않습니다
-**A**: 다음을 확인하세요:
-
-1. **설정 파일 위치**가 올바른지 확인:
-   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-   - Linux: `~/.config/Claude/claude_desktop_config.json`
-
-2. **JSON 형식**이 유효한지 확인 (쉼표, 따옴표 등)
-
-3. **Claude Desktop 완전 재시작**:
-   - 시스템 트레이/메뉴바에서도 종료
-   - 다시 실행
-
-4. **npm 패키지 설치 확인**:
-   ```bash
-   npm list -g google-chat-webhook-mcp
-   ```
-
-5. **로그 확인** (Claude Desktop 개발자 도구):
-   - View → Developer → Developer Tools → Console
-
-### Q: GitHub Copilot에서 사용할 수 있나요?
-**A**: GitHub Copilot은 아직 MCP를 공식 지원하지 않습니다. 
-
-**현재 가능한 방법:**
-- VS Code 터미널에서 직접 실행
-- MCP Bridge 확장 사용 (실험적)
-- GitHub Copilot의 향후 업데이트 대기
-
-**권장:** 현재는 **Claude Desktop**에서 사용하는 것이 가장 안정적입니다.
 
 ### Q: 이미지가 표시되지 않습니다
 **A**: 이미지 URL 검증 실패 원인:
@@ -1176,5 +1210,5 @@ MIT License - [LICENSE](LICENSE)
 ## 관련 프로젝트
 
 - [Model Context Protocol](https://github.com/modelcontextprotocol)
-- [Claude Desktop](https://claude.ai/desktop)
+- [Claude Code](https://claude.ai/desktop)
 - [Google Chat API](https://developers.google.com/chat)

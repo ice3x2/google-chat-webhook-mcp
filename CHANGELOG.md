@@ -139,7 +139,7 @@ https://chat.googleapis.com/v1/spaces/SPACE_ID/messages?key=YOUR_KEY&token=YOUR_
 
 #### Documentation
 - **README.md**: 포괄적인 사용 가이드
-  - 설치 및 설정 (Claude Desktop 연동)
+  - 설치 및 설정 (Claude Code 연동)
   - 사용법 (3가지 MCP 도구)
   - Markdown 문법 지원 목록
   - 환경 변수 설명

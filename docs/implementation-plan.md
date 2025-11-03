@@ -4,7 +4,7 @@
 
 ### 목적
 - Google Chat 웹훅을 통해 메시지를 전송하는 MCP (Model Context Protocol) 서버 구현
-- Claude Desktop, GitHub Copilot 등 MCP 클라이언트에서 사용 가능
+- Claude Code, GitHub Copilot 등 MCP 클라이언트에서 사용 가능
 
 ### 주요 기능
 - Google Chat 웹훅으로 텍스트 메시지 전송
@@ -50,7 +50,7 @@ GoogleChatWebHook/
 **설정 파라미터:**
 - `webhookUrl` (required): Google Chat 웹훅 URL
 
-**설정 예시 (Claude Desktop):**
+**설정 예시 (Claude Code):**
 ```json
 {
   "mcpServers": {
@@ -200,7 +200,7 @@ POST https://chat.googleapis.com/v1/spaces/{space}/messages
 ### Phase 4: 테스트 및 문서화
 1. ✅ 로컬 테스트
 2. ✅ README 작성 (사용법, 설정 예시)
-3. ✅ Claude Desktop 설정 가이드
+3. ✅ Claude Code 설정 가이드
 4. ✅ GitHub Copilot 설정 가이드
 
 ## 7. 사용 시나리오
@@ -234,10 +234,10 @@ npm run build
 npm run start
 ```
 
-### Claude Desktop 연동
+### Claude Code 연동
 1. 프로젝트 빌드
-2. Claude Desktop 설정 파일에 MCP 서버 추가
-3. Claude Desktop 재시작
+2. Claude Code 설정 파일에 MCP 서버 추가
+3. Claude Code 재시작
 
 ### GitHub Copilot 연동
 1. VS Code MCP 설정 파일 수정
