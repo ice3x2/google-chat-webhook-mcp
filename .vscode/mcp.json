@@ -1,0 +1,13 @@
+{
+	"servers": {
+		"google-search": {
+			"type": "stdio",
+			"command": "npx",
+			"args": [
+				"-y",
+				"g-search-mcp"
+			]
+		}
+	},
+	"inputs": []
+}

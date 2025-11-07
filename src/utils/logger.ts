@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 import { LogLevel, LogEntry, LogConfig, LogEvent } from '../types/log.js';
 
 /**
@@ -7,6 +8,7 @@ import { LogLevel, LogEntry, LogConfig, LogEvent } from '../types/log.js';
  * - 일별 로그 파일 생성
  * - 30일 자동 정리
  * - JSON 형식 로그
+ * - 권한 부족 시 메모리 기반 폴백
  */
 export class Logger {
   private config: LogConfig;
@@ -16,11 +18,23 @@ export class Logger {
     WARN: 2,
     ERROR: 3,
   };
+  private isFileLoggingDisabled: boolean = false;
 
   constructor(config?: Partial<LogConfig>) {
+    // LOG_DIR이 명시적으로 설정되지 않으면 사용자 홈 디렉토리 사용
+    let defaultLogDir = process.env.LOG_DIR;
+    if (!defaultLogDir) {
+      try {
+        const homeDir = os.homedir();
+        defaultLogDir = path.join(homeDir, '.google-chat-webhook-mcp', 'logs');
+      } catch {
+        defaultLogDir = './logs';
+      }
+    }
+
     this.config = {
       level: (process.env.LOG_LEVEL as LogLevel) || 'INFO',
-      dir: process.env.LOG_DIR || './logs',
+      dir: defaultLogDir,
       retentionDays: parseInt(process.env.LOG_RETENTION_DAYS || '30', 10),
       enableConsole: process.env.LOG_ENABLE_CONSOLE !== 'false',
       ...config,
@@ -31,10 +45,26 @@ export class Logger {
 
   /**
    * 로그 디렉토리 생성
+   * 실패 시 파일 로깅 비활성화 (우아한 폴백)
    */
   private ensureLogDir(): void {
-    if (!fs.existsSync(this.config.dir)) {
-      fs.mkdirSync(this.config.dir, { recursive: true });
+    try {
+      if (!fs.existsSync(this.config.dir)) {
+        fs.mkdirSync(this.config.dir, { recursive: true });
+      }
+    } catch (error) {
+      const err = error as any;
+      if (err.code === 'EPERM' || err.code === 'EACCES') {
+        console.warn(
+          `⚠️  Cannot create log directory: ${this.config.dir}\n` +
+          `   Reason: ${err.code === 'EPERM' ? 'Permission denied' : 'Access denied'}\n` +
+          `   Logging to console only. Set LOG_DIR environment variable to a writable path.\n` +
+          `   Example: set LOG_DIR=%USERPROFILE%\\.mcp-logs`
+        );
+        this.isFileLoggingDisabled = true;
+      } else {
+        throw error;
+      }
     }
   }
 
@@ -66,15 +96,30 @@ export class Logger {
 
     const logLine = JSON.stringify(entry) + '\n';
 
-    // 일반 로그 파일에 작성
-    fs.appendFileSync(this.getLogFilename(false), logLine, 'utf-8');
+    // 파일 로깅 시도 (권한이 있을 때만)
+    if (!this.isFileLoggingDisabled) {
+      try {
+        // 일반 로그 파일에 작성
+        fs.appendFileSync(this.getLogFilename(false), logLine, 'utf-8');
 
-    // 에러 로그는 별도 파일에도 작성
-    if (entry.level === 'ERROR') {
-      fs.appendFileSync(this.getLogFilename(true), logLine, 'utf-8');
+        // 에러 로그는 별도 파일에도 작성
+        if (entry.level === 'ERROR') {
+          fs.appendFileSync(this.getLogFilename(true), logLine, 'utf-8');
+        }
+      } catch (error) {
+        const err = error as any;
+        if (err.code === 'EPERM' || err.code === 'EACCES') {
+          // 파일 로깅 권한 문제 - 향후 시도하지 않음
+          this.isFileLoggingDisabled = true;
+          console.warn(`⚠️  File logging disabled due to permission error: ${err.message}`);
+        } else {
+          // 다른 에러는 throw
+          throw error;
+        }
+      }
     }
 
-    // 콘솔 출력
+    // 콘솔 출력 (항상 수행)
     if (this.config.enableConsole) {
       const timestamp = new Date(entry.timestamp).toISOString();
       const color = this.getLogColor(entry.level);
@@ -169,6 +214,10 @@ export class Logger {
    * 오래된 로그 파일 정리
    */
   public cleanOldLogs(): void {
+    if (this.isFileLoggingDisabled) {
+      return; // 파일 로깅이 비활성화되면 정리도 스킵
+    }
+
     try {
       const files = fs.readdirSync(this.config.dir);
       const now = Date.now();
